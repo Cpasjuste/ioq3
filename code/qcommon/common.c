@@ -2539,7 +2539,9 @@ static void Com_WriteCDKey( const char *filename, const char *ikey ) {
 	}
 
 #ifndef _WIN32
+#ifndef __PSP2__
 	savedumask = umask(0077);
+#endif
 #endif
 	f = FS_SV_FOpenFileWrite( fbuffer );
 	if ( !f ) {
@@ -2556,7 +2558,11 @@ static void Com_WriteCDKey( const char *filename, const char *ikey ) {
 	FS_FCloseFile( f );
 out:
 #ifndef _WIN32
+#ifndef __PSP2__
 	umask(savedumask);
+#else
+	;
+#endif
 #else
 	;
 #endif

@@ -29,10 +29,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 #include <unistd.h>
+#ifndef __PSP2__
 #include <signal.h>
 #include <termios.h>
 #include <fcntl.h>
 #include <sys/time.h>
+#else
+#include <psp2shell.h>
+#define printf psp2shell_print
+#endif
 
 /*
 =============================================================
@@ -44,6 +49,7 @@ called before and after a stdout or stderr output
 =============================================================
 */
 
+#ifndef __PSP2__
 extern qboolean stdinIsATTY;
 static qboolean stdin_active;
 // general flag to tell about tty console mode
@@ -72,6 +78,7 @@ static int hist_current = -1, hist_count = 0;
 #else
 #define TTY_CONSOLE_PROMPT "]"
 #endif
+#endif
 
 /*
 ==================
@@ -83,8 +90,10 @@ FIXME relevant?
 */
 static void CON_FlushIn( void )
 {
+	#ifndef __PSP2__
 	char key;
 	while (read(STDIN_FILENO, &key, 1)!=-1);
+	#endif
 }
 
 /*
@@ -100,6 +109,7 @@ send "\b \b"
 */
 static void CON_Back( void )
 {
+	#ifndef __PSP2__
 	char key;
 	size_t UNUSED_VAR size;
 
@@ -109,6 +119,7 @@ static void CON_Back( void )
 	size = write(STDOUT_FILENO, &key, 1);
 	key = '\b';
 	size = write(STDOUT_FILENO, &key, 1);
+	#endif
 }
 
 /*
@@ -121,6 +132,7 @@ bring cursor back to beginning of line
 */
 static void CON_Hide( void )
 {
+	#ifndef __PSP2__
 	if( ttycon_on )
 	{
 		int i;
@@ -142,6 +154,7 @@ static void CON_Hide( void )
 		}
 		ttycon_hide++;
 	}
+	#endif
 }
 
 /*
@@ -154,6 +167,7 @@ FIXME need to position the cursor if needed?
 */
 static void CON_Show( void )
 {
+	#ifndef __PSP2__
 	if( ttycon_on )
 	{
 		int i;
@@ -173,6 +187,7 @@ static void CON_Show( void )
 			}
 		}
 	}
+	#endif
 }
 
 /*
@@ -184,6 +199,7 @@ Never exit without calling this, or your terminal will be left in a pretty bad s
 */
 void CON_Shutdown( void )
 {
+	#ifndef __PSP2__
 	if (ttycon_on)
 	{
 		CON_Hide();
@@ -192,6 +208,7 @@ void CON_Shutdown( void )
 
 	// Restore blocking to stdin reads
 	fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL, 0) & ~O_NONBLOCK);
+	#endif
 }
 
 /*
@@ -201,6 +218,7 @@ Hist_Add
 */
 void Hist_Add(field_t *field)
 {
+	#ifndef __PSP2__
 	int i;
 
 	// Don't save blank lines in history.
@@ -222,6 +240,7 @@ void Hist_Add(field_t *field)
 		hist_count++;
 	}
 	hist_current = -1; // re-init
+	#endif
 }
 
 /*
@@ -231,6 +250,7 @@ Hist_Prev
 */
 field_t *Hist_Prev( void )
 {
+	#ifndef __PSP2__
 	int hist_prev;
 	assert(hist_count <= CON_HISTORY);
 	assert(hist_count >= 0);
@@ -243,6 +263,7 @@ field_t *Hist_Prev( void )
 	}
 	hist_current++;
 	return &(ttyEditLines[hist_current]);
+	#endif
 }
 
 /*
@@ -252,6 +273,7 @@ Hist_Next
 */
 field_t *Hist_Next( void )
 {
+	#ifndef __PSP2__
 	assert(hist_count <= CON_HISTORY);
 	assert(hist_count >= 0);
 	assert(hist_current >= -1);
@@ -265,6 +287,7 @@ field_t *Hist_Next( void )
 		return NULL;
 	}
 	return &(ttyEditLines[hist_current]);
+	#endif
 }
 
 /*
@@ -277,7 +300,9 @@ set attributes if user did CTRL+Z and then does fg again.
 
 void CON_SigCont(int signum)
 {
+	#ifndef __PSP2__
 	CON_Init();
+	#endif
 }
 
 /*
@@ -289,6 +314,7 @@ Initialize the console input (tty mode if possible)
 */
 void CON_Init( void )
 {
+	#ifndef __PSP2__
 	struct termios tc;
 
 	// If the process is backgrounded (running non interactively)
@@ -337,6 +363,7 @@ void CON_Init( void )
 	ttycon_on = qtrue;
 	ttycon_hide = 1; // Mark as hidden, so prompt is shown in CON_Show
 	CON_Show();
+	#endif
 }
 
 /*
@@ -346,6 +373,7 @@ CON_Input
 */
 char *CON_Input( void )
 {
+	#ifndef __PSP2__
 	// we use this when sending back commands
 	static char text[MAX_EDIT_LINE];
 	int avail;
@@ -503,6 +531,7 @@ char *CON_Input( void )
 
 		return text;
 	}
+	#endif
 	return NULL;
 }
 
@@ -513,6 +542,9 @@ CON_Print
 */
 void CON_Print( const char *msg )
 {
+	#ifdef __PSP2__
+	printf(msg);
+	#else
 	if (!msg[0])
 		return;
 
@@ -544,4 +576,6 @@ void CON_Print( const char *msg )
 		// Defer calling CON_Show
 		ttycon_show_overdue++;
 	}
+	#endif
 }
+

@@ -39,3 +39,10 @@ profile
 *.sdf
 *.opensdf
 *.suo
+
+# PSP2
+eboot.bin
+ioquake3.velf
+ioquake3.vpk
+param.sfo
+

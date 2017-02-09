@@ -3312,7 +3312,11 @@ static void FS_Startup( const char *gameName )
 
 	fs_packFiles = 0;
 
+#ifdef __PSP2__
 	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
+#else
+	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
+#endif
 	fs_basepath = Cvar_Get ("fs_basepath", Sys_DefaultInstallPath(), CVAR_INIT|CVAR_PROTECTED );
 	fs_basegame = Cvar_Get ("fs_basegame", "", CVAR_INIT );
 	homePath = Sys_DefaultHomePath();

@@ -67,13 +67,15 @@ static qboolean	winsockInitialized = qfalse;
 #	include <errno.h>
 #	include <netdb.h>
 #	include <netinet/in.h>
+#ifndef __PSP2__
 #	include <arpa/inet.h>
 #	include <net/if.h>
 #	include <sys/ioctl.h>
+#endif
 #	include <sys/types.h>
 #	include <sys/time.h>
 #	include <unistd.h>
-#	if !defined(__sun) && !defined(__sgi)
+#	if !defined(__sun) && !defined(__sgi) && !defined(__PSP2__)
 #		include <ifaddrs.h>
 #	endif
 
@@ -89,6 +91,18 @@ typedef int SOCKET;
 typedef int	ioctlarg_t;
 #	define socketError			errno
 
+#endif
+
+#ifdef __PSP2__
+#include <psp2/net/net.h>
+#include <sys/select.h>
+struct sockaddr_storage {
+    uint8_t ss_len;
+    sa_family_t ss_family;
+    char ss_padding[128];
+};
+#define INADDR_BROADCAST SCE_NET_INADDR_BROADCAST
+#define INADDR_ANY SCE_NET_INADDR_ANY
 #endif
 
 static qboolean usingSocks = qfalse;
@@ -118,10 +132,12 @@ static SOCKET	ip6_socket = INVALID_SOCKET;
 static SOCKET	socks_socket = INVALID_SOCKET;
 static SOCKET	multicast6_socket = INVALID_SOCKET;
 
+#ifndef __PSP2__
 // Keep track of currently joined multicast group.
 static struct ipv6_mreq curgroup;
 // And the currently bound address.
 static struct sockaddr_in6 boundto;
+#endif
 
 #ifndef IF_NAMESIZE
   #define IF_NAMESIZE 16
@@ -220,6 +236,7 @@ static void NetadrToSockadr( netadr_t *a, struct sockaddr *s ) {
 		((struct sockaddr_in *)s)->sin_addr.s_addr = *(int *)&a->ip;
 		((struct sockaddr_in *)s)->sin_port = a->port;
 	}
+#ifndef __PSP2__
 	else if( a->type == NA_IP6 ) {
 		((struct sockaddr_in6 *)s)->sin6_family = AF_INET6;
 		((struct sockaddr_in6 *)s)->sin6_addr = * ((struct in6_addr *) &a->ip6);
@@ -232,6 +249,7 @@ static void NetadrToSockadr( netadr_t *a, struct sockaddr *s ) {
 		((struct sockaddr_in6 *)s)->sin6_addr = curgroup.ipv6mr_multiaddr;
 		((struct sockaddr_in6 *)s)->sin6_port = a->port;
 	}
+#endif
 }
 
 
@@ -241,6 +259,7 @@ static void SockadrToNetadr( struct sockaddr *s, netadr_t *a ) {
 		*(int *)&a->ip = ((struct sockaddr_in *)s)->sin_addr.s_addr;
 		a->port = ((struct sockaddr_in *)s)->sin_port;
 	}
+#ifndef __PSP2__
 	else if(s->sa_family == AF_INET6)
 	{
 		a->type = NA_IP6;
@@ -248,9 +267,11 @@ static void SockadrToNetadr( struct sockaddr *s, netadr_t *a ) {
 		a->port = ((struct sockaddr_in6 *)s)->sin6_port;
 		a->scope_id = ((struct sockaddr_in6 *)s)->sin6_scope_id;
 	}
+#endif
 }
 
 
+#ifndef __PSP2__
 static struct addrinfo *SearchAddrInfo(struct addrinfo *hints, sa_family_t family)
 {
 	while(hints)
@@ -263,6 +284,7 @@ static struct addrinfo *SearchAddrInfo(struct addrinfo *hints, sa_family_t famil
 	
 	return NULL;
 }
+#endif
 
 /*
 =============
@@ -271,6 +293,7 @@ Sys_StringToSockaddr
 */
 static qboolean Sys_StringToSockaddr(const char *s, struct sockaddr *sadr, int sadr_len, sa_family_t family)
 {
+#ifndef __PSP2__
 	struct addrinfo hints;
 	struct addrinfo *res = NULL;
 	struct addrinfo *search = NULL;
@@ -329,7 +352,8 @@ static qboolean Sys_StringToSockaddr(const char *s, struct sockaddr *sadr, int s
 	
 	if(res)
 		freeaddrinfo(res);
-	
+
+#endif
 	return qfalse;
 }
 
@@ -342,13 +366,17 @@ static void Sys_SockaddrToString(char *dest, int destlen, struct sockaddr *input
 {
 	socklen_t inputlen;
 
+#ifndef __PSP2__
 	if (input->sa_family == AF_INET6)
 		inputlen = sizeof(struct sockaddr_in6);
 	else
+#endif
 		inputlen = sizeof(struct sockaddr_in);
 
+#ifndef __PSP2__
 	if(getnameinfo(input, inputlen, dest, destlen, NULL, 0, NI_NUMERICHOST) && destlen > 0)
 		*dest = '\0';
+#endif
 }
 
 /*
@@ -675,8 +703,10 @@ void Sys_SendPacket( int length, const void *data, netadr_t to ) {
 	else {
 		if(addr.ss_family == AF_INET)
 			ret = sendto( ip_socket, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in) );
+#ifndef __PSP2__
 		else if(addr.ss_family == AF_INET6)
 			ret = sendto( ip6_socket, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6) );
+#endif
 	}
 	if( ret == SOCKET_ERROR ) {
 		int err = socketError;
@@ -730,6 +760,7 @@ qboolean Sys_IsLANAddress( netadr_t adr ) {
 		if(adr.ip[0] == 127)
 			return qtrue;
 	}
+#ifndef __PSP2__
 	else if(adr.type == NA_IP6)
 	{
 		if(adr.ip6[0] == 0xfe && (adr.ip6[1] & 0xc0) == 0x80)
@@ -737,7 +768,8 @@ qboolean Sys_IsLANAddress( netadr_t adr ) {
 		if((adr.ip6[0] & 0xfe) == 0xfc)
 			return qtrue;
 	}
-	
+
+#endif
 	// Now compare against the networks this computer is member of.
 	for(index = 0; index < numIP; index++)
 	{
@@ -754,12 +786,13 @@ qboolean Sys_IsLANAddress( netadr_t adr ) {
 			else
 			{
 				// TODO? should we check the scope_id here?
-
+#ifndef __PSP2__
 				compareip = (byte *) &((struct sockaddr_in6 *) &localIP[index].addr)->sin6_addr;
 				comparemask = (byte *) &((struct sockaddr_in6 *) &localIP[index].netmask)->sin6_addr;
 				compareadr = adr.ip6;
 				
 				addrsize = sizeof(adr.ip6);
+#endif
 			}
 
 			differed = qfalse;
@@ -830,6 +863,7 @@ SOCKET NET_IPSocket( char *net_interface, int port, int *err ) {
 		Com_Printf( "WARNING: NET_IPSocket: socket: %s\n", NET_ErrorString() );
 		return newsocket;
 	}
+#ifndef __PSP2__
 	// make it non-blocking
 	if( ioctlsocket( newsocket, FIONBIO, &_true ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: ioctl FIONBIO: %s\n", NET_ErrorString() );
@@ -837,7 +871,7 @@ SOCKET NET_IPSocket( char *net_interface, int port, int *err ) {
 		closesocket(newsocket);
 		return INVALID_SOCKET;
 	}
-
+#endif
 	// make it broadcast capable
 	if( setsockopt( newsocket, SOL_SOCKET, SO_BROADCAST, (char *) &i, sizeof(i) ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString() );
@@ -878,6 +912,7 @@ SOCKET NET_IPSocket( char *net_interface, int port, int *err ) {
 NET_IP6Socket
 ====================
 */
+#ifndef __PSP2__
 SOCKET NET_IP6Socket( char *net_interface, int port, struct sockaddr_in6 *bindto, int *err ) {
 	SOCKET				newsocket;
 	struct sockaddr_in6	address;
@@ -955,6 +990,7 @@ SOCKET NET_IP6Socket( char *net_interface, int port, struct sockaddr_in6 *bindto
 
 	return newsocket;
 }
+#endif
 
 /*
 ====================
@@ -964,6 +1000,7 @@ Set the current multicast group
 */
 void NET_SetMulticast6(void)
 {
+#ifndef __PSP2__
 	struct sockaddr_in6 addr;
 
 	if(!*net_mcast6addr->string || !Sys_StringToSockaddr(net_mcast6addr->string, (struct sockaddr *) &addr, sizeof(addr), AF_INET6))
@@ -988,6 +1025,7 @@ void NET_SetMulticast6(void)
 	}
 	else
 		curgroup.ipv6mr_interface = 0;
+#endif
 }
 
 /*
@@ -998,6 +1036,7 @@ Join an ipv6 multicast group
 */
 void NET_JoinMulticast6(void)
 {
+#ifndef __PSP2__
 	int err;
 	
 	if(ip6_socket == INVALID_SOCKET || multicast6_socket != INVALID_SOCKET || (net_enabled->integer & NET_DISABLEMCAST))
@@ -1044,10 +1083,12 @@ void NET_JoinMulticast6(void)
 			return;
 		}
 	}
+#endif
 }
 
 void NET_LeaveMulticast6()
 {
+#ifndef __PSP2__
 	if(multicast6_socket != INVALID_SOCKET)
 	{
 		if(multicast6_socket != ip6_socket)
@@ -1057,6 +1098,7 @@ void NET_LeaveMulticast6()
 
 		multicast6_socket = INVALID_SOCKET;
 	}
+#endif
 }
 
 /*
@@ -1249,11 +1291,13 @@ static void NET_AddLocalAddress(char *ifname, struct sockaddr *addr, struct sock
 			addrlen = sizeof(struct sockaddr_in);
 			localIP[numIP].type = NA_IP;
 		}
+#ifndef __PSP2__
 		else if(family == AF_INET6)
 		{
 			addrlen = sizeof(struct sockaddr_in6);
 			localIP[numIP].type = NA_IP6;
 		}
+#endif
 		else
 			return;
 		
@@ -1293,6 +1337,7 @@ static void NET_GetLocalAddress(void)
 }
 #else
 static void NET_GetLocalAddress( void ) {
+#ifndef __PSP2__
 	char				hostname[256];
 	struct addrinfo	hint;
 	struct addrinfo	*res = NULL;
@@ -1339,6 +1384,7 @@ static void NET_GetLocalAddress( void ) {
 	
 	if(res)
 		freeaddrinfo(res);
+#endif
 }
 #endif
 
@@ -1362,6 +1408,7 @@ void NET_OpenIP( void ) {
 	// dedicated servers can be started without requiring
 	// a different net_port for each one
 
+#ifndef __PSP2__
 	if(net_enabled->integer & NET_ENABLEV6)
 	{
 		for( i = 0 ; i < 10 ; i++ )
@@ -1382,6 +1429,7 @@ void NET_OpenIP( void ) {
 			Com_Printf( "WARNING: Couldn't bind to a v6 ip address.\n");
 	}
 
+#endif
 	if(net_enabled->integer & NET_ENABLEV4)
 	{
 		for( i = 0 ; i < 10 ; i++ ) {

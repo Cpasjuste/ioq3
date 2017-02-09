@@ -166,7 +166,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #if defined(__linux__) || defined(__FreeBSD_kernel__) || defined(__GNU__)
 
+#ifndef __PSP2__
 #include <endian.h>
+#endif
 
 #if defined(__linux__)
 #define OS_STRING "linux"

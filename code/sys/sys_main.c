@@ -47,6 +47,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 
+#ifdef __PSP2__
+#include <psp2/io/stat.h>
+#include <psp2shell.h>
+#define printf psp2shell_print
+int _newlib_heap_size_user = 192 * 1024 * 1024;
+#endif
+
 static char binaryPath[ MAX_OSPATH ] = { 0 };
 static char installPath[ MAX_OSPATH ] = { 0 };
 
@@ -169,11 +176,12 @@ Sys_PIDFileName
 */
 static char *Sys_PIDFileName( const char *gamedir )
 {
+#ifndef __PSP2__
 	const char *homePath = Cvar_VariableString( "fs_homepath" );
 
 	if( *homePath != '\0' )
 		return va( "%s/%s/%s", homePath, gamedir, PID_FILENAME );
-
+#endif
 	return NULL;
 }
 
@@ -184,10 +192,12 @@ Sys_RemovePIDFile
 */
 void Sys_RemovePIDFile( const char *gamedir )
 {
+#ifndef __PSP2__
 	char *pidFile = Sys_PIDFileName( gamedir );
 
 	if( pidFile != NULL )
 		remove( pidFile );
+#endif
 }
 
 /*
@@ -199,6 +209,9 @@ Return qtrue if there is an existing stale PID file
 */
 static qboolean Sys_WritePIDFile( const char *gamedir )
 {
+#ifdef __PSP2__
+	return qtrue;
+#else
 	char      *pidFile = Sys_PIDFileName( gamedir );
 	FILE      *f;
 	qboolean  stale = qfalse;
@@ -238,6 +251,7 @@ static qboolean Sys_WritePIDFile( const char *gamedir )
 		Com_Printf( S_COLOR_YELLOW "Couldn't write %s.\n", pidFile );
 
 	return stale;
+#endif
 }
 
 /*
@@ -246,6 +260,7 @@ Sys_InitPIDFile
 =================
 */
 void Sys_InitPIDFile( const char *gamedir ) {
+#ifndef __PSP2__
 	if( Sys_WritePIDFile( gamedir ) ) {
 #ifndef DEDICATED
 		char message[1024];
@@ -263,6 +278,7 @@ void Sys_InitPIDFile( const char *gamedir ) {
 		}
 #endif
 	}
+#endif
 }
 
 /*
@@ -279,13 +295,13 @@ static __attribute__ ((noreturn)) void Sys_Exit( int exitCode )
 #ifndef DEDICATED
 	SDL_Quit( );
 #endif
-
+#ifndef __PSP2__
 	if( exitCode < 2 && com_fullyInitialized )
 	{
 		// Normal exit
 		Sys_RemovePIDFile( FS_GetCurrentGameDir() );
 	}
-
+#endif
 	NET_Shutdown( );
 
 	Sys_PlatformExit( );
@@ -483,8 +499,9 @@ void Sys_UnloadDll( void *dllHandle )
 		Com_Printf("Sys_UnloadDll(NULL)\n");
 		return;
 	}
-
+#ifndef __PSP2__
 	Sys_UnloadLibrary(dllHandle);
+#endif
 }
 
 /*
@@ -503,6 +520,7 @@ void *Sys_LoadDll(const char *name, qboolean useSystemLib)
 	if(useSystemLib)
 		Com_Printf("Trying to load \"%s\"...\n", name);
 	
+#ifndef __PSP2__
 	if(!useSystemLib || !(dllhandle = Sys_LoadLibrary(name)))
 	{
 		const char *topDir;
@@ -534,7 +552,8 @@ void *Sys_LoadDll(const char *name, qboolean useSystemLib)
 				Com_Printf("Loading \"%s\" failed\n", name);
 		}
 	}
-	
+
+#endif
 	return dllhandle;
 }
 
@@ -555,6 +574,7 @@ void *Sys_LoadGameDll(const char *name,
 	assert(name);
 
 	Com_Printf( "Loading DLL file: %s\n", name);
+#ifndef __PSP2__
 	libHandle = Sys_LoadLibrary(name);
 
 	if(!libHandle)
@@ -576,7 +596,7 @@ void *Sys_LoadGameDll(const char *name,
 
 	Com_Printf ( "Sys_LoadGameDll(%s) found vmMain function at %p\n", name, *entryPoint );
 	dllEntry( systemcalls );
-
+#endif
 	return libHandle;
 }
 
@@ -651,6 +671,9 @@ int main( int argc, char **argv )
 {
 	int   i;
 	char  commandLine[ MAX_STRING_CHARS ] = { 0 };
+#ifdef __PSP2__
+	psp2shell_init(3333, 10);
+#endif
 
 #ifndef DEDICATED
 	// SDL version check
@@ -692,8 +715,15 @@ int main( int argc, char **argv )
 #endif
 
 	Sys_ParseArgs( argc, argv );
+
+#ifdef __PSP2__
+	sceIoMkdir("ux0:/data/ioq3", 777);
+	Sys_SetBinaryPath( "ux0:/data/ioq3" );
+	Sys_SetDefaultInstallPath( DEFAULT_BASEDIR );
+#else
 	Sys_SetBinaryPath( Sys_Dirname( argv[ 0 ] ) );
 	Sys_SetDefaultInstallPath( DEFAULT_BASEDIR );
+#endif
 
 	// Concatenate the command line for passing to Com_Init
 	for( i = 1; i < argc; i++ )
@@ -710,9 +740,12 @@ int main( int argc, char **argv )
 		Q_strcat( commandLine, sizeof( commandLine ), " " );
 	}
 
+	printf("Com_Init\n");
 	Com_Init( commandLine );
+	printf("NET_Init\n");
 	NET_Init( );
 
+	printf("CON_Init\n");
 	CON_Init( );
 
 	signal( SIGILL, Sys_SigHandler );

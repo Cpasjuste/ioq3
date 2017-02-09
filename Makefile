@@ -323,10 +323,10 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu" "gnu")
   BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
     -pipe -DUSE_ICON -DARCH_STRING=\\\"$(ARCH)\\\"
   CLIENT_CFLAGS += $(SDL_CFLAGS)
-
+ifeq ($(PSP2),0)
   OPTIMIZEVM = -O3
   OPTIMIZE = $(OPTIMIZEVM) -ffast-math
-
+endif
   ifeq ($(ARCH),x86_64)
     OPTIMIZEVM = -O3
     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
@@ -361,15 +361,25 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu" "gnu")
   endif
   endif
 
+ifeq ($(PSP2),1)
+  SHLIBEXT=a
+  SHLIBCFLAGS=
+  SHLIBLDFLAGS=-static $(LDFLAGS)
+else
   SHLIBEXT=so
   SHLIBCFLAGS=-fPIC -fvisibility=hidden
   SHLIBLDFLAGS=-shared $(LDFLAGS)
+endif
 
   THREAD_LIBS=-lpthread
+ifeq ($(PSP2),0)
   LIBS=-ldl -lm
+endif
 
   CLIENT_LIBS=$(SDL_LIBS)
+ifeq ($(PSP2),0)
   RENDERER_LIBS = $(SDL_LIBS) -lGL
+endif
 
   ifeq ($(USE_OPENAL),1)
     ifneq ($(USE_OPENAL_DLOPEN),1)
@@ -2062,6 +2072,9 @@ ifdef MINGW
     $(B)/client/sys_win32.o
 else
   Q3OBJ += \
+ifeq ($(PSP2),0)
+	$(B)/client/psp2_dirent.o \
+endif
     $(B)/client/sys_unix.o
 endif
 

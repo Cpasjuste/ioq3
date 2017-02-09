@@ -29,14 +29,24 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <sys/stat.h>
 #include <errno.h>
 #include <stdio.h>
+#ifdef __PSP2__
+#include <psp2/kernel/threadmgr.h>
+#include <sys/select.h>
+#include "psp2_dirent.h"
+#else
 #include <dirent.h>
+#endif
 #include <unistd.h>
+#ifndef __PSP2__
 #include <sys/mman.h>
+#endif
 #include <sys/time.h>
 #include <pwd.h>
 #include <libgen.h>
 #include <fcntl.h>
+#ifndef __PSP2__
 #include <fenv.h>
+#endif
 #include <sys/wait.h>
 
 qboolean stdinIsATTY;
@@ -170,12 +180,16 @@ Sys_GetCurrentUser
 */
 char *Sys_GetCurrentUser( void )
 {
+#ifdef __PSP2__
+	return "player";
+#else
 	struct passwd *p;
 
 	if ( (p = getpwuid( getuid() )) == NULL ) {
 		return "player";
 	}
 	return p->pw_name;
+#endif
 }
 
 #define MEM_THRESHOLD 96*1024*1024
@@ -199,7 +213,12 @@ Sys_Basename
 */
 const char *Sys_Basename( char *path )
 {
+#ifdef __PSP2__
+	char *p = strrchr (path, '/');
+	return p ? p + 1 : (char *) path;
+#else
 	return basename( path );
+#endif
 }
 
 /*
@@ -209,7 +228,63 @@ Sys_Dirname
 */
 const char *Sys_Dirname( char *path )
 {
+#ifdef __PSP2__
+	static const char dot[] = ".";
+	char *last_slash;
+
+	/* Find last '/'.  */
+	last_slash = path != NULL ? strrchr (path, '/') : NULL;
+
+	if (last_slash != NULL && last_slash != path && last_slash[1] == '\0')
+    {
+		/* Determine whether all remaining characters are slashes.  */
+		char *runp;
+
+		for (runp = last_slash; runp != path; --runp)
+			if (runp[-1] != '/')
+				break;
+
+		/* The '/' is the last character, we have to look further.  */
+		if (runp != path)
+			last_slash = memrchr (path, '/', runp - path);
+	}
+
+	if (last_slash != NULL)
+	{
+		/* Determine whether all remaining characters are slashes.  */
+		char *runp;
+
+		for (runp = last_slash; runp != path; --runp)
+			if (runp[-1] != '/')
+				break;
+
+		/* Terminate the path.  */
+		if (runp == path)
+		{
+			/* The last slash is the first character in the string.  We have to
+			return "/".  As a special case we have to return "//" if there
+			are exactly two slashes at the beginning of the string.  See
+			XBD 4.10 Path Name Resolution for more information.  */
+			if (last_slash == path + 1)
+				++last_slash;
+			else
+				last_slash = path + 1;
+		}
+		else
+			last_slash = runp;
+
+		last_slash[0] = '\0';
+	}
+	else
+		/* This assignment is ill-designed but the XPG specs require to
+		return a string containing "." in any case no directory part is
+		found and so a static and constant string is required.  */
+		path = (char *) dot;
+
+	return path;
+#else
 	return dirname( path );
+#endif
 }
 
 /*
@@ -249,6 +324,9 @@ Sys_Mkfifo
 */
 FILE *Sys_Mkfifo( const char *ospath )
 {
+#ifdef __PSP2__
+	return NULL;
+#else
 	FILE	*fifo;
 	int	result;
 	int	fn;
@@ -268,8 +346,8 @@ FILE *Sys_Mkfifo( const char *ospath )
 		fn = fileno( fifo );
 		fcntl( fn, F_SETFL, O_NONBLOCK );
 	}
-
 	return fifo;
+#endif
 }
 
 /*
@@ -279,6 +357,9 @@ Sys_Cwd
 */
 char *Sys_Cwd( void )
 {
+#ifdef __PSP2__
+	return "ux0:/data/ioq3";
+#else
 	static char cwd[MAX_OSPATH];
 
 	char *result = getcwd( cwd, sizeof( cwd ) - 1 );
@@ -288,6 +369,7 @@ char *Sys_Cwd( void )
 	cwd[MAX_OSPATH-1] = 0;
 
 	return cwd;
+#endif
 }
 
 /*
@@ -489,6 +571,9 @@ void Sys_Sleep( int msec )
 	if( msec == 0 )
 		return;
 
+#ifdef __PSP2__
+	sceKernelDelayThread( msec * 1000 );
+#else
 	if( stdinIsATTY )
 	{
 		fd_set fdset;
@@ -516,6 +601,7 @@ void Sys_Sleep( int msec )
 
 		usleep( msec * 1000 );
 	}
+#endif
 }
 
 /*
@@ -621,6 +707,9 @@ Sys_Exec
 */
 static int Sys_Exec( void )
 {
+#ifdef __PSP2__
+	return -1;
+#else
 	pid_t pid = fork( );
 
 	if( pid < 0 )
@@ -645,6 +734,7 @@ static int Sys_Exec( void )
 
 		return -1;
 	}
+#endif
 }
 
 /*
@@ -825,8 +915,10 @@ void Sys_GLimpInit( void )
 
 void Sys_SetFloatEnv(void)
 {
+#ifndef __PSP2__
 	// rounding toward nearest
 	fesetround(FE_TONEAREST);
+#endif
 }
 
 /*
