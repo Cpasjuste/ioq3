@@ -1,0 +1,51 @@
+V=1
+
+ARCH=arm
+
+CC=arm-vita-eabi-gcc
+CXX=arm-vita-eabi-g++
+AR=arm-vita-eabi-ar
+RANLIB=arm-vita-eabi-ranlib
+STRIP=arm-vita-eabi-strip
+
+CFLAGS=-Wl,-q -I$(VITASDK)/arm-vita-eabi/include \
+	-mfpu=neon -mcpu=cortex-a9 -march=armv7-a -mfloat-abi=hard \
+	-fno-short-enums -ffunction-sections -funwind-tables \
+	-ftree-vectorize -fsingle-precision-constant \
+	-D__PSP2__ -D__FLOAT_WORD_ORDER=__LITTLE_ENDIAN -D__GNU__
+
+BASEGAME_CFLAGS=$(CFLAGS)
+CLIENT_CFLAGS=$(CFLAGS)
+
+OPTIMIZEVM=-O0
+OPTIMIZE=$(OPTIMIZEVM)
+# -ffast-math
+
+SDL_CFLAGS=-I$(VITASDK)/arm-vita-eabi/include -I$(VITASDK)/arm-vita-eabi/include/SDL2
+LDFLAGS=-L$(VITASDK)/arm-vita-eabi/lib
+SDL_LIBS=-lpsp2shell -lSceAppMgr_stub -lSceNet_stub -lSceNetCtl_stub \
+	-lSDL2 -lvita2d -lSceDisplay_stub -lSceGxm_stub -lSceSysmodule_stub -lSceAudio_stub -lSceCtrl_stub -lScePower_stub \
+	-lOSMesa -lssl -lcrypto -lstdc++ -lpthread -lm
+	
+DEFAULT_BASEDIR="ux0:/data/ioq3"
+
+PSP2=1
+BUILD_CLIENT=1
+BUILD_GAME_SO=0
+BUILD_MISSIONPACK=0
+BUILD_GAME_QVM=0
+BUILD_SERVER=0
+BUILD_STANDALONE=0
+
+USE_INTERNAL_LIBS=0
+USE_CODEC_OPUS=0
+USE_OPENAL=0
+USE_OPENAL_DLOPEN=0
+USE_CURL=0
+USE_VOIP=0
+USE_MUMBLE=0
+USE_RENDERER_DLOPEN=0
+
+BUILD_RENDERER_OPENGL2=0
+
+GENERATE_DEPENDENCIES=0
