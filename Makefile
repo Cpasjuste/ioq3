@@ -2071,10 +2071,11 @@ ifdef MINGW
     $(B)/client/win_resource.o \
     $(B)/client/sys_win32.o
 else
+ifeq ($(PSP2),1)
   Q3OBJ += \
-ifeq ($(PSP2),0)
-	$(B)/client/psp2_dirent.o \
+	$(B)/client/psp2_dirent.o
 endif
+  Q3OBJ += \
     $(B)/client/sys_unix.o
 endif
 
@@ -2814,6 +2815,15 @@ ifneq ($(BUILD_GAME_SO),0)
 					$(COPYDIR)/$(MISSIONPACK)/.
   endif
 endif
+
+ifeq ($(PSP2),1)
+vpk:
+	$(STRIP) -g $(BR)/$(CLIENTBIN)$(FULLBINEXT)
+	vita-elf-create $(BR)/$(CLIENTBIN)$(FULLBINEXT) $(CLIENTBIN)$(FULLBINEXT).velf
+	vita-make-fself -c $(CLIENTBIN)$(FULLBINEXT).velf eboot.bin
+	vita-mksfoex -s TITLE_ID="IOQUAKE30" "ioQuake3" param.sfo
+	vita-pack-vpk -s param.sfo -b eboot.bin $(CLIENTBIN)$(FULLBINEXT).vpk
+endif	
 
 clean: clean-debug clean-release
 ifeq ($(PLATFORM),mingw32)

@@ -1,5 +1,4 @@
-V=1
-
+#V=1
 ARCH=arm
 
 CC=arm-vita-eabi-gcc
@@ -10,16 +9,18 @@ STRIP=arm-vita-eabi-strip
 
 CFLAGS=-Wl,-q -I$(VITASDK)/arm-vita-eabi/include \
 	-mfpu=neon -mcpu=cortex-a9 -march=armv7-a -mfloat-abi=hard \
-	-fno-short-enums -ffunction-sections -funwind-tables \
-	-ftree-vectorize -fsingle-precision-constant \
-	-D__PSP2__ -D__FLOAT_WORD_ORDER=__LITTLE_ENDIAN -D__GNU__
+	-D__PSP2__ -D__FLOAT_WORD_ORDER=1 -D__GNU__ \
+	-fno-asynchronous-unwind-tables -funroll-loops \
+	-mword-relocations -fno-unwind-tables -fno-optimize-sibling-calls \
+	-mvectorize-with-neon-quad -funsafe-math-optimizations \
+	-mlittle-endian -munaligned-access \
+	-fno-short-enums -fsingle-precision-constant
 
 BASEGAME_CFLAGS=$(CFLAGS)
 CLIENT_CFLAGS=$(CFLAGS)
 
-OPTIMIZEVM=-O0
-OPTIMIZE=$(OPTIMIZEVM)
-# -ffast-math
+OPTIMIZEVM=-O3
+OPTIMIZE=$(OPTIMIZEVM) -ffast-math
 
 SDL_CFLAGS=-I$(VITASDK)/arm-vita-eabi/include -I$(VITASDK)/arm-vita-eabi/include/SDL2
 LDFLAGS=-L$(VITASDK)/arm-vita-eabi/lib
@@ -37,8 +38,10 @@ BUILD_GAME_QVM=0
 BUILD_SERVER=0
 BUILD_STANDALONE=0
 
-USE_INTERNAL_LIBS=0
 USE_CODEC_OPUS=0
+USE_INTERNAL_OPUS=0
+
+USE_INTERNAL_LIBS=0
 USE_OPENAL=0
 USE_OPENAL_DLOPEN=0
 USE_CURL=0

@@ -572,7 +572,11 @@ void Sys_Sleep( int msec )
 		return;
 
 #ifdef __PSP2__
+	if( msec < 0 )
+		msec = 10;
+
 	sceKernelDelayThread( msec * 1000 );
+	//Com_Printf("sceKernelDelayThread\n");
 #else
 	if( stdinIsATTY )
 	{

@@ -482,7 +482,7 @@ static void IN_InitJoystick( void )
 		SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
 		return;
 	}
-
+	
 	in_joystickNo = Cvar_Get( "in_joystickNo", "0", CVAR_ARCHIVE );
 	if( in_joystickNo->integer < 0 || in_joystickNo->integer >= total )
 		Cvar_Set( "in_joystickNo", "0" );

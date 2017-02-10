@@ -38,7 +38,11 @@ int demo_protocols[] =
 
 #define MIN_DEDICATED_COMHUNKMEGS 1
 #define MIN_COMHUNKMEGS		56
+#ifdef __PSP2__
+#define DEF_COMHUNKMEGS 	64
+#else
 #define DEF_COMHUNKMEGS 	128
+#endif
 #define DEF_COMZONEMEGS		24
 #define DEF_COMHUNKMEGS_S	XSTRING(DEF_COMHUNKMEGS)
 #define DEF_COMZONEMEGS_S	XSTRING(DEF_COMZONEMEGS)
@@ -240,11 +244,11 @@ A Com_Printf that only shows up if the "developer" cvar is set
 void QDECL Com_DPrintf( const char *fmt, ...) {
 	va_list		argptr;
 	char		msg[MAXPRINTMSG];
-		
+#ifndef __PSP2__		
 	if ( !com_developer || !com_developer->integer ) {
 		return;			// don't confuse non-developers with techie stuff...
 	}
-
+#endif
 	va_start (argptr,fmt);	
 	Q_vsnprintf (msg, sizeof(msg), fmt, argptr);
 	va_end (argptr);

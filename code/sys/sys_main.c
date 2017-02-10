@@ -48,6 +48,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/qcommon.h"
 
 #ifdef __PSP2__
+#include <psp2/power.h>
 #include <psp2/io/stat.h>
 #include <psp2shell.h>
 #define printf psp2shell_print
@@ -672,6 +673,10 @@ int main( int argc, char **argv )
 	int   i;
 	char  commandLine[ MAX_STRING_CHARS ] = { 0 };
 #ifdef __PSP2__
+	scePowerSetArmClockFrequency(444);
+    scePowerSetBusClockFrequency(222);
+    scePowerSetGpuClockFrequency(222);
+    scePowerSetGpuXbarClockFrequency(166);
 	psp2shell_init(3333, 10);
 #endif
 
