@@ -285,7 +285,9 @@ Sys_Mkdir
 qboolean Sys_Mkdir(const char *path) {
 
     int result = sceIoMkdir(path, 0777);
-    if (result != 0 && result != 0x80010011)
+    //printf("Sys_Mkdir: 0x%08X\n", result);
+    if (result != 0 && result != 0x80010011
+            && result != 0x8001000D)
         return errno == EEXIST;
 
     return qtrue;

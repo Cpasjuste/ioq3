@@ -145,7 +145,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         SceDisplay_stub SceGxm_stub SceSysmodule_stub SceAudio_stub
         SceCommonDialog_stub SceCtrl_stub SceTouch_stub SceHid_stub ScePower_stub
         vorbisfile vorbis ogg jpeg z
-        OSMesa ssl crypto pthread m
+        OSMesa ssl crypto stdc++ pthread m
         )
 
 vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME})
