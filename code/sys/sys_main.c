@@ -498,25 +498,43 @@ from executable path, then fs_basepath.
 
 void *Sys_LoadDll(const char *name, qboolean useSystemLib)
 {
-	void *dllhandle;
-	
+	void *dllhandle = NULL;
+
+	if(!Sys_DllExtension(name))
+	{
+		Com_Printf("Refusing to attempt to load library \"%s\": Extension not allowed.\n", name);
+		return NULL;
+	}
+
 	if(useSystemLib)
+	{
 		Com_Printf("Trying to load \"%s\"...\n", name);
+		dllhandle = Sys_LoadLibrary(name);
+	}
 	
-	if(!useSystemLib || !(dllhandle = Sys_LoadLibrary(name)))
+	if(!dllhandle)
 	{
 		const char *topDir;
 		char libPath[MAX_OSPATH];
+		int len;
 
 		topDir = Sys_BinaryPath();
 
 		if(!*topDir)
 			topDir = ".";
 
-		Com_Printf("Trying to load \"%s\" from \"%s\"...\n", name, topDir);
-		Com_sprintf(libPath, sizeof(libPath), "%s%c%s", topDir, PATH_SEP, name);
+		len = Com_sprintf(libPath, sizeof(libPath), "%s%c%s", topDir, PATH_SEP, name);
+		if(len < sizeof(libPath))
+		{
+			Com_Printf("Trying to load \"%s\" from \"%s\"...\n", name, topDir);
+			dllhandle = Sys_LoadLibrary(libPath);
+		}
+		else
+		{
+			Com_Printf("Skipping trying to load \"%s\" from \"%s\", file name is too long.\n", name, topDir);
+		}
 
-		if(!(dllhandle = Sys_LoadLibrary(libPath)))
+		if(!dllhandle)
 		{
 			const char *basePath = Cvar_VariableString("fs_basepath");
 			
@@ -525,9 +543,16 @@ void *Sys_LoadDll(const char *name, qboolean useSystemLib)
 			
 			if(FS_FilenameCompare(topDir, basePath))
 			{
-				Com_Printf("Trying to load \"%s\" from \"%s\"...\n", name, basePath);
-				Com_sprintf(libPath, sizeof(libPath), "%s%c%s", basePath, PATH_SEP, name);
-				dllhandle = Sys_LoadLibrary(libPath);
+				len = Com_sprintf(libPath, sizeof(libPath), "%s%c%s", basePath, PATH_SEP, name);
+				if(len < sizeof(libPath))
+				{
+					Com_Printf("Trying to load \"%s\" from \"%s\"...\n", name, basePath);
+					dllhandle = Sys_LoadLibrary(libPath);
+				}
+				else
+				{
+					Com_Printf("Skipping trying to load \"%s\" from \"%s\", file name is too long.\n", name, basePath);
+				}
 			}
 			
 			if(!dllhandle)
@@ -553,6 +578,12 @@ void *Sys_LoadGameDll(const char *name,
 	void (*dllEntry)(intptr_t (*syscallptr)(intptr_t, ...));
 
 	assert(name);
+
+	if(!Sys_DllExtension(name))
+	{
+		Com_Printf("Refusing to attempt to load library \"%s\": Extension not allowed.\n", name);
+		return NULL;
+	}
 
 	Com_Printf( "Loading DLL file: %s\n", name);
 	libHandle = Sys_LoadLibrary(name);
@@ -652,6 +683,9 @@ int main( int argc, char **argv )
 	int   i;
 	char  commandLine[ MAX_STRING_CHARS ] = { 0 };
 
+	extern void Sys_LaunchAutoupdater(int argc, char **argv);
+	Sys_LaunchAutoupdater(argc, argv);
+
 #ifndef DEDICATED
 	// SDL version check
 
@@ -710,10 +744,9 @@ int main( int argc, char **argv )
 		Q_strcat( commandLine, sizeof( commandLine ), " " );
 	}
 
+	CON_Init( );
 	Com_Init( commandLine );
 	NET_Init( );
-
-	CON_Init( );
 
 	signal( SIGILL, Sys_SigHandler );
 	signal( SIGFPE, Sys_SigHandler );
@@ -723,7 +756,6 @@ int main( int argc, char **argv )
 
 	while( 1 )
 	{
-		IN_Frame( );
 		Com_Frame( );
 	}
 
