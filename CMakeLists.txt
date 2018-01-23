@@ -131,10 +131,9 @@ target_include_directories(qsdl PRIVATE ${INCLUDES})
 
 add_executable(${PROJECT_NAME}
         ${SRC}/code/sys/con_log.c
-        ${SRC}/code/sys/con_passive.c
-        ${SRC}/code/sys/sys_autoupdater.c
         ${SRC}/code/psp2/sys_main.c
         ${SRC}/code/psp2/sys_psp2.c
+        ${SRC}/code/psp2/con_psp2.c
         ${SRC}/code/psp2/net_psp2.c
         )
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDES})
