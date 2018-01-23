@@ -39,3 +39,6 @@ profile
 *.sdf
 *.opensdf
 *.suo
+
+# CLion
+cmake-build*
