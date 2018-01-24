@@ -273,6 +273,7 @@ RB_TestFlare
 ==================
 */
 void RB_TestFlare( flare_t *f ) {
+#ifndef __PSP2__
 	float			depth;
 	qboolean		visible;
 	float			fade;
@@ -314,6 +315,7 @@ void RB_TestFlare( flare_t *f ) {
 	}
 
 	f->drawIntensity = fade;
+#endif
 }
 
 
@@ -512,7 +514,9 @@ void RB_RenderFlares (void) {
 	}
 
 	if ( backEnd.viewParms.isPortal ) {
+#ifndef __PSP2__
 		qglDisable (GL_CLIP_PLANE0);
+#endif
 	}
 
 	qglPushMatrix();

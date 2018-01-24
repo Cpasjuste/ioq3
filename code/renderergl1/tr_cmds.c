@@ -363,7 +363,7 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 		if ((err = qglGetError()) != GL_NO_ERROR)
 			ri.Error(ERR_FATAL, "RE_BeginFrame() - glGetError() failed (0x%x)!", err);
 	}
-
+#ifndef __PSP2__
 	if (glConfig.stereoEnabled) {
 		if( !(cmd = R_GetCommandBuffer(sizeof(*cmd))) )
 			return;
@@ -379,6 +379,7 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 		}
 	}
 	else
+#endif
 	{
 		if(r_anaglyphMode->integer)
 		{

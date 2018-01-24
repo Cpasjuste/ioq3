@@ -32,6 +32,8 @@ set(INCLUDES
         ${SRC}/code/renderergl1
         ${SRC}/code/sdl
         ${SRC}/code/psp2
+        ${SRC}/code/psp2/vitaGL/source
+        ${SRC}/code/psp2/vitaGL/source/shaders
         ${VITASDK}/arm-vita-eabi/include/SDL2
         )
 
@@ -116,10 +118,18 @@ target_include_directories(qrenderergl1 PRIVATE ${INCLUDES})
 ####################
 ## SDL
 ####################
-file(GLOB SDL_SRC ${SRC}/code/sdl/*.c)
-add_library(qsdl ${SDL_SRC})
-target_compile_options(qsdl PRIVATE ${FLAGS} -DUSE_CODEC_VORBIS)
-target_include_directories(qsdl PRIVATE ${INCLUDES})
+#file(GLOB SDL_SRC ${SRC}/code/sdl/*.c)
+#add_library(qsdl ${SDL_SRC})
+#target_compile_options(qsdl PRIVATE ${FLAGS} -DUSE_CODEC_VORBIS)
+#target_include_directories(qsdl PRIVATE ${INCLUDES})
+
+####################
+## VITAGL
+####################
+file(GLOB VGL_SRC ${SRC}/code/psp2/vitaGL/source/*.c)
+add_library(vitaGL ${VGL_SRC})
+target_compile_options(vitaGL PRIVATE ${FLAGS})
+target_include_directories(vitaGL PRIVATE ${INCLUDES})
 
 ####################
 ####################
@@ -135,17 +145,21 @@ add_executable(${PROJECT_NAME}
         ${SRC}/code/psp2/sys_psp2.c
         ${SRC}/code/psp2/con_psp2.c
         ${SRC}/code/psp2/net_psp2.c
+        ${SRC}/code/psp2/psp2_gamma.c
+        ${SRC}/code/psp2/psp2_glimp.c
+        ${SRC}/code/psp2/psp2_input.c
+        ${SRC}/code/psp2/psp2_snd.c
         )
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDES})
 target_compile_options(${PROJECT_NAME} PRIVATE ${FLAGS})
 target_link_libraries(${PROJECT_NAME} PRIVATE
-        qclient qserver qbot qrenderergl1 qrenderercommon qcommon qsdl
-        SDL2 vita2d
+        qclient qserver qbot qrenderergl1 qrenderercommon qcommon
+        vitaGL
+        #qsdl SDL2 vita2d
         SceAppMgr_stub SceNet_stub SceNetCtl_stub
         SceDisplay_stub SceGxm_stub SceSysmodule_stub SceAudio_stub
         SceCommonDialog_stub SceCtrl_stub SceTouch_stub SceHid_stub ScePower_stub
-        vorbisfile vorbis ogg jpeg z
-        OSMesa ssl crypto stdc++ pthread m
+        vorbisfile vorbis ogg jpeg z c m
         )
 
 vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME})

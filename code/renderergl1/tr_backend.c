@@ -66,6 +66,9 @@ void GL_Bind( image_t *image ) {
 */
 void GL_SelectTexture( int unit )
 {
+#ifdef __PSP2__
+	ri.Error( ERR_DROP, "GL_SelectTexture: not implemented");
+#else
 	if ( glState.currenttmu == unit )
 	{
 		return;
@@ -89,6 +92,7 @@ void GL_SelectTexture( int unit )
 	}
 
 	glState.currenttmu = unit;
+#endif
 }
 
 
@@ -487,10 +491,14 @@ void RB_BeginDrawingView (void) {
 		plane2[3] = DotProduct (plane, backEnd.viewParms.or.origin) - plane[3];
 
 		qglLoadMatrixf( s_flipMatrix );
+#ifndef __PSP2__
 		qglClipPlane (GL_CLIP_PLANE0, plane2);
 		qglEnable (GL_CLIP_PLANE0);
+#endif
 	} else {
+#ifndef __PSP2__
 		qglDisable (GL_CLIP_PLANE0);
+#endif
 	}
 }
 
@@ -712,8 +720,9 @@ void	RB_SetGL2D (void) {
 			  GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
 
 	GL_Cull( CT_TWO_SIDED );
+#ifndef __PSP2__
 	qglDisable( GL_CLIP_PLANE0 );
-
+#endif
 	// set time for 2D shaders
 	backEnd.refdef.time = ri.Milliseconds();
 	backEnd.refdef.floatTime = backEnd.refdef.time * 0.001;
@@ -952,9 +961,9 @@ const void	*RB_DrawBuffer( const void *data ) {
 	const drawBufferCommand_t	*cmd;
 
 	cmd = (const drawBufferCommand_t *)data;
-
+#ifndef __PSP2__
 	qglDrawBuffer( cmd->buffer );
-
+#endif
 	// clear screen for debugging
 	if ( r_clear->integer ) {
 		qglClearColor( 1, 0, 0.5, 1 );
@@ -1033,9 +1042,9 @@ RB_ColorMask
 const void *RB_ColorMask(const void *data)
 {
 	const colorMaskCommand_t *cmd = data;
-	
+#ifndef __PSP2__
 	qglColorMask(cmd->rgba[0], cmd->rgba[1], cmd->rgba[2], cmd->rgba[3]);
-	
+#endif
 	return (const void *)(cmd + 1);
 }
 
@@ -1088,7 +1097,7 @@ const void	*RB_SwapBuffers( const void *data ) {
 		int i;
 		long sum = 0;
 		unsigned char *stencilReadback;
-
+#ifndef __PSP2__
 		stencilReadback = ri.Hunk_AllocateTempMemory( glConfig.vidWidth * glConfig.vidHeight );
 		qglReadPixels( 0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, stencilReadback );
 
@@ -1098,6 +1107,7 @@ const void	*RB_SwapBuffers( const void *data ) {
 
 		backEnd.pc.c_overDraw += sum;
 		ri.Hunk_FreeTempMemory( stencilReadback );
+#endif
 	}
 
 

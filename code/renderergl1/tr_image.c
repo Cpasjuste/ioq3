@@ -163,6 +163,7 @@ void R_ImageList_f( void ) {
 
 		switch(image->internalFormat)
 		{
+#ifndef __PSP2__
 			case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT:
 				format = "sDXT1";
 				// 64 bits per 16 pixels, so 4 bits per pixel
@@ -200,31 +201,39 @@ void R_ImageList_f( void ) {
 				break;
 			case GL_RGBA4:
 			case GL_RGBA8:
+#endif
 			case GL_RGBA:
 				format = "RGBA ";
 				// 4 bytes per pixel
 				estSize *= 4;
 				break;
+#ifndef __PSP2__
 			case GL_LUMINANCE8:
 			case GL_LUMINANCE16:
+#endif
 			case GL_LUMINANCE:
 				format = "L    ";
 				// 1 byte per pixel?
 				break;
+#ifndef __PSP2__
 			case GL_RGB5:
 			case GL_RGB8:
+#endif
 			case GL_RGB:
 				format = "RGB  ";
 				// 3 bytes per pixel?
 				estSize *= 3;
 				break;
+#ifndef __PSP2__
 			case GL_LUMINANCE8_ALPHA8:
 			case GL_LUMINANCE16_ALPHA16:
+#endif
 			case GL_LUMINANCE_ALPHA:
 				format = "LA   ";
 				// 2 bytes per pixel?
 				estSize *= 2;
 				break;
+#ifndef __PSP2__
 			case GL_SRGB_EXT:
 			case GL_SRGB8_EXT:
 				format = "sRGB ";
@@ -248,6 +257,7 @@ void R_ImageList_f( void ) {
 				// 2 byte per pixel?
 				estSize *= 2;
 				break;
+#endif
 		}
 
 		// mipmap adds about 50%
@@ -684,15 +694,18 @@ static void Upload32( unsigned *data,
 		{
 			if(r_greyscale->integer)
 			{
+#ifndef __PSP2__
 				if(r_texturebits->integer == 16)
 					internalFormat = GL_LUMINANCE8;
 				else if(r_texturebits->integer == 32)
 					internalFormat = GL_LUMINANCE16;
 				else
+#endif
 					internalFormat = GL_LUMINANCE;
 			}
 			else
 			{
+#ifndef __PSP2__
 				if ( allowCompression && glConfig.textureCompression == TC_S3TC_ARB )
 				{
 					internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
@@ -706,6 +719,9 @@ static void Upload32( unsigned *data,
 					internalFormat = GL_RGB5;
 				}
 				else if ( r_texturebits->integer == 32 )
+#else
+				if ( r_texturebits->integer == 32 )
+#endif
 				{
 					internalFormat = GL_RGB8;
 				}
@@ -719,20 +735,26 @@ static void Upload32( unsigned *data,
 		{
 			if(r_greyscale->integer)
 			{
+#ifndef __PSP2__
 				if(r_texturebits->integer == 16)
 					internalFormat = GL_LUMINANCE8_ALPHA8;
 				else if(r_texturebits->integer == 32)
 					internalFormat = GL_LUMINANCE16_ALPHA16;
 				else
+#endif
 					internalFormat = GL_LUMINANCE_ALPHA;
 			}
 			else
 			{
+#ifndef __PSP2__
 				if ( r_texturebits->integer == 16 )
 				{
 					internalFormat = GL_RGBA4;
 				}
 				else if ( r_texturebits->integer == 32 )
+#else
+				if ( r_texturebits->integer == 32 )
+#endif
 				{
 					internalFormat = GL_RGBA8;
 				}
@@ -810,18 +832,20 @@ done:
 
 	if (mipmap)
 	{
+#ifndef __PSP2__
 		if ( textureFilterAnisotropic )
 			qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
 					(GLint)Com_Clamp( 1, maxAnisotropy, r_ext_max_anisotropy->integer ) );
-
+#endif
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
 	}
 	else
 	{
+#ifndef __PSP2__
 		if ( textureFilterAnisotropic )
 			qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1 );
-
+#endif
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	}

@@ -1,0 +1,3 @@
+[submodule "code/psp2/vitaGL"]
+	path = code/psp2/vitaGL
+	url = git@github.com:Cpasjuste/vitaGL.git

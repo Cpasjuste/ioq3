@@ -368,6 +368,9 @@ Return value must be freed with ri.Hunk_FreeTempMemory()
 
 byte *RB_ReadPixels(int x, int y, int width, int height, size_t *offset, int *padlen)
 {
+#ifdef __PSP2__
+	return NULL;
+#else
 	byte *buffer, *bufstart;
 	int padwidth, linelen;
 	GLint packAlign;
@@ -387,6 +390,7 @@ byte *RB_ReadPixels(int x, int y, int width, int height, size_t *offset, int *pa
 	*padlen = padwidth - linelen;
 	
 	return buffer;
+#endif
 }
 
 /* 
@@ -396,6 +400,7 @@ RB_TakeScreenshot
 */  
 void RB_TakeScreenshot(int x, int y, int width, int height, char *fileName)
 {
+#ifndef __PSP2__
 	byte *allbuf, *buffer;
 	byte *srcptr, *destptr;
 	byte *endline, *endmem;
@@ -448,6 +453,7 @@ void RB_TakeScreenshot(int x, int y, int width, int height, char *fileName)
 	ri.FS_WriteFile(fileName, buffer, memcount + 18);
 
 	ri.Hunk_FreeTempMemory(allbuf);
+#endif
 }
 
 /* 
@@ -458,6 +464,7 @@ RB_TakeScreenshotJPEG
 
 void RB_TakeScreenshotJPEG(int x, int y, int width, int height, char *fileName)
 {
+#ifndef __PSP2__
 	byte *buffer;
 	size_t offset = 0, memcount;
 	int padlen;
@@ -471,6 +478,7 @@ void RB_TakeScreenshotJPEG(int x, int y, int width, int height, char *fileName)
 
 	RE_SaveJPG(fileName, r_screenshotJpegQuality->integer, width, height, buffer + offset, padlen);
 	ri.Hunk_FreeTempMemory(buffer);
+#endif
 }
 
 /*
@@ -759,6 +767,7 @@ RB_TakeVideoFrameCmd
 */
 const void *RB_TakeVideoFrameCmd( const void *data )
 {
+#ifndef __PSP2__
 	const videoFrameCommand_t	*cmd;
 	byte				*cBuf;
 	size_t				memcount, linelen;
@@ -826,7 +835,10 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 		ri.CL_WriteAVIVideoFrame(cmd->encodeBuffer, avipadwidth * cmd->height);
 	}
 
-	return (const void *)(cmd + 1);	
+	return (const void *)(cmd + 1);
+#else
+	return NULL;
+#endif
 }
 
 //============================================================================
@@ -856,7 +868,9 @@ void GL_SetDefaultState( void )
 	GL_TextureMode( r_textureMode->string );
 	GL_TexEnv( GL_MODULATE );
 
+#ifndef __PSP2__
 	qglShadeModel( GL_SMOOTH );
+#endif
 	qglDepthFunc( GL_LEQUAL );
 
 	// the vertex array is always enabled, but the color and texture
@@ -920,6 +934,7 @@ void GfxInfo_f( void )
 	ri.Printf( PRINT_ALL, "GL_RENDERER: %s\n", glConfig.renderer_string );
 	ri.Printf( PRINT_ALL, "GL_VERSION: %s\n", glConfig.version_string );
 	ri.Printf( PRINT_ALL, "GL_EXTENSIONS: " );
+#ifndef __PSP2__
 	if ( qglGetStringi )
 	{
 		GLint numExtensions;
@@ -932,6 +947,7 @@ void GfxInfo_f( void )
 		}
 	}
 	else
+#endif
 	{
 		R_PrintLongString( glConfig.extensions_string );
 	}

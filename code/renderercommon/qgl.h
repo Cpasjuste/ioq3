@@ -26,6 +26,70 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef __QGL_H__
 #define __QGL_H__
 
+#ifdef __PSP2__
+
+#include "vitaGL.h"
+
+#define APIENTRY
+#define APIENTRYP APIENTRY *
+#define GL_RGB8 GL_RGB
+#define GL_RGBA8 GL_RGBA
+#define GL_UNSIGNED_INT GL_UNSIGNED_BYTE
+
+#define qglGetIntegerv glGetIntegerv
+#define qglGetError glGetError
+#define qglClearDepth glClearDepth
+#define qglCullFace glCullFace
+#define qglColor4f glColor4f
+#define qglActiveTextureARB glActiveTextureARB
+#define qglDisable glDisable
+#define qglEnable glEnable
+#define qglDepthFunc glDepthFunc
+#define qglEnableClientState glEnableClientState
+#define qglPolygonMode glPolygonMode
+#define qglDepthMask glDepthMask
+
+#define qglLockArraysEXT glLockArraysEXT
+#define qglActiveTextureARB glActiveTextureARB
+#define qglColor3f glColor3f
+#define qglVertex3fv glVertex3fv
+#define qglDepthRange glDepthRange
+#define qglColor4ubv glColor4ubv
+#define qglMultiTexCoord2fARB glMultiTexCoord2fARB
+#define qglTexCoord2fv glTexCoord2fv
+#define qglVertex3fv glVertex3fv
+#define qglDisableClientState glDisableClientState
+
+#define qglBindTexture glBindTexture
+#define qglTexEnvf glTexEnvf
+#define qglBlendFunc glBlendFunc
+#define qglAlphaFunc glAlphaFunc
+#define qglClearColor glClearColor
+#define qglClear glClear
+#define qglMatrixMode glMatrixMode
+#define qglLoadMatrixf glLoadMatrixf
+#define qglViewport glViewport
+#define qglScissor glScissor
+#define qglFinish glFinish
+#define qglLoadIdentity glLoadIdentity
+#define qglOrtho glOrtho
+#define qglTexImage2D glTexImage2D
+#define qglTexParameterf glTexParameterf
+#define qglTexSubImage2D glTexSubImage2D
+#define qglBegin glBegin
+#define qglTexCoord2f glTexCoord2f
+#define qglVertex2f glVertex2f
+#define qglEnd glEnd
+#define qglStencilMask glStencilMask
+#define qglClearStencil glClearStencil
+#define qglStencilFunc glStencilFunc
+#define qglStencilOp glStencilOp
+
+//#define qglDrawBuffer glDrawBuffer
+//#define qglColorMask glColorMask
+
+
+#else
 #ifdef USE_LOCAL_HEADERS
 #	include "SDL_opengl.h"
 #else
@@ -318,5 +382,7 @@ extern int qglMajorVersion, qglMinorVersion;
 extern int qglesMajorVersion, qglesMinorVersion;
 #define QGL_VERSION_ATLEAST( major, minor ) ( qglMajorVersion > major || ( qglMajorVersion == major && qglMinorVersion >= minor ) )
 #define QGLES_VERSION_ATLEAST( major, minor ) ( qglesMajorVersion > major || ( qglesMajorVersion == major && qglesMinorVersion >= minor ) )
+
+#endif // PSP2
 
 #endif

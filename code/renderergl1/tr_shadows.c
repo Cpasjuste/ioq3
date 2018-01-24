@@ -153,6 +153,7 @@ triangleFromEdge[ v1 ][ v2 ]
 =================
 */
 void RB_ShadowTessEnd( void ) {
+#ifndef __PSP2__
 	int		i;
 	int		numTris;
 	vec3_t	lightDir;
@@ -230,6 +231,7 @@ void RB_ShadowTessEnd( void ) {
 
 	// reenable writing to the color buffer
 	qglColorMask(rgba[0], rgba[1], rgba[2], rgba[3]);
+#endif
 }
 
 
@@ -244,6 +246,7 @@ overlap and double darken.
 =================
 */
 void RB_ShadowFinish( void ) {
+#ifndef __PSP2__
 	if ( r_shadows->integer != 2 ) {
 		return;
 	}
@@ -275,6 +278,7 @@ void RB_ShadowFinish( void ) {
 
 	qglColor4f(1,1,1,1);
 	qglDisable( GL_STENCIL_TEST );
+#endif
 }
 
 
