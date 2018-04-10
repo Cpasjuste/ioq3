@@ -3072,13 +3072,12 @@ qboolean FS_CheckDirTraversal(const char *checkdir)
 FS_InvalidGameDir
 
 return true if path is a reference to current directory or directory traversal
+or a sub-directory
 ================
 */
 qboolean FS_InvalidGameDir( const char *gamedir ) {
 	if ( !strcmp( gamedir, "." ) || !strcmp( gamedir, ".." )
-		|| !strcmp( gamedir, "/" ) || !strcmp( gamedir, "\\" )
-		|| strstr( gamedir, "/.." ) || strstr( gamedir, "\\.." )
-		|| FS_CheckDirTraversal( gamedir ) ) {
+		|| strchr( gamedir, '/' ) || strchr( gamedir, '\\' ) ) {
 		return qtrue;
 	}
 
@@ -3459,17 +3458,17 @@ static void FS_CheckPak0( void )
 {
 	searchpath_t	*path;
 	pack_t		*curpack;
+	const char	*pakBasename;
 	qboolean founddemo = qfalse;
 	unsigned int foundPak = 0, foundTA = 0;
 
 	for( path = fs_searchpaths; path; path = path->next )
 	{
-		const char* pakBasename = path->pack->pakBasename;
-
 		if(!path->pack)
 			continue;
 
 		curpack = path->pack;
+		pakBasename = curpack->pakBasename;
 
 		if(!Q_stricmpn( curpack->pakGamename, "demoq3", MAX_OSPATH )
 				&& !Q_stricmpn( pakBasename, "pak0", MAX_OSPATH ))
